@@ -29,7 +29,7 @@ namespace Herobook
             services.AddTransient<IDatabase, DemoDatabase>();
             services.AddMvc(options => {
                 options.AddHalJsonSupport();
-            });
+            }).AddControllersAsServices();
 
         }
 

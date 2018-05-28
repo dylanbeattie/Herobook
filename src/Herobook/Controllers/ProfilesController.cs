@@ -9,6 +9,7 @@ using Herobook.Workshop.Data;
 using Herobook.Workshop.Data.Entities;
 using Microsoft.AspNetCore.Http.Extensions;
 using Herobook.Workshop.Hypermedia;
+using System.Dynamic;
 
 namespace Herobook.Controllers.Api
 {
@@ -17,9 +18,12 @@ namespace Herobook.Controllers.Api
     {
 
         private IDatabase db;
-        public ProfilesController(IDatabase database)
+        private PhotosController photosController;
+
+        public ProfilesController(IDatabase database, PhotosController pc)
         {
             this.db = database;
+            this.photosController = pc;
         }
 
         [Route("api/profiles/")]
@@ -41,6 +45,12 @@ namespace Herobook.Controllers.Api
         public object GetProfile(string username, string expand = null)
         {
             var resource = db.FindProfile(username).ToResource();
+            if (resource != null && !string.IsNullOrEmpty(expand)) {
+                dynamic embedded = new ExpandoObject();
+                if (expand.Contains("friends")) embedded.friends = GetProfileFriends(username);
+                if (expand.Contains("photos")) embedded.photos = photosController.GetProfilePhotos(username);
+                resource._embedded = embedded;
+            }
             return (object)resource ?? NotFound();
         }
 
