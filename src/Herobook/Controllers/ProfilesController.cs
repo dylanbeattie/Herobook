@@ -32,9 +32,19 @@ namespace Herobook.Controllers.Api
         {
             var _links = Hal.Paginate(Request.Path, index, count, db.CountProfiles());
             var items = db.ListProfiles().Skip(index).Take(count).Select(profile => profile.ToResource()); ;
+            var _actions = new {
+                create = new {
+                    name = "Create a new profile",
+                    href = Request.Path,
+                    method = "POST",
+                    type = "application/json",
+                    schema = new { href = "/schemas/profile.json" }
+                }
+            };
             var result = new
             {
                 _links,
+                _actions,
                 items
             };
             return Ok(result);

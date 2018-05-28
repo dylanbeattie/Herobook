@@ -73,6 +73,16 @@ function getCookie(key) {
                 } catch (error) {
                     tokens.push(jqXhr.responseText);
                 }
+            } else if (/text\/.*html/.test(responseContentType)) {
+                var html = jqXhr.responseText;
+                tokens.push('<iframe id="html-error-iframe">iframe</iframe>');
+                callback = function() {
+                    var doc = document.getElementById('html-error-iframe').contentWindow.document;
+                    doc.open();
+                    doc.write(html);
+                    doc.close();
+                    // if (typeof callback === "function") callback();
+                }
             } else {
                 tokens.push(jqXhr.status + " " + textStatus + "\r\n\r\n");
                 tokens.push(htmlEncode(jqXhr.responseText));

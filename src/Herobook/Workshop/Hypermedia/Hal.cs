@@ -55,11 +55,25 @@ namespace Herobook.Workshop.Hypermedia {
             resource._links = new {
                 self = Hal.Href(href)
             };
+            resource._actions = new {
+                update = new {
+                    name = "Update this status",
+                    href,
+                    method = "PUT",
+                    type = "application/json"
+                },
+                delete = new {
+                    name = "Delete this status",
+                    href,
+                    method = "DELETE"
+                }
+            };
 
             return (resource);
         }
 
         public static dynamic ToResource(this Profile profile) {
+            if (profile == null) return null;;
             dynamic resource = profile.ToDynamic();
             resource._links = new {
                 self = Hal.Href($"/api/profiles/{profile.Username}"),
@@ -67,7 +81,19 @@ namespace Herobook.Workshop.Hypermedia {
                 statuses = Hal.Href($"/api/profiles/{profile.Username}/statuses"),
                 photos = Hal.Href($"/api/profiles/{profile.Username}/photos")
             };
-
+            resource._actions = new {
+                update = new {
+                    name = "Update this profile",
+                    href = $"/api/profiles/{profile.Username}",
+                    method = "PUT",
+                    type = "application/json"
+                },
+                delete = new {
+                    name = "Delete this profile",
+                    href = $"/api/profiles/{profile.Username}",
+                    method = "DELETE"
+                }
+            };
             return resource;
         }
     }
