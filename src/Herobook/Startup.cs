@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Herobook.Workshop.Data;
+using System.Buffers;
 
 namespace Herobook
 {
@@ -26,7 +27,9 @@ namespace Herobook
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddTransient<IDatabase, DemoDatabase>();
-            services.AddMvc();
+            services.AddMvc(options => {
+                options.AddHalJsonSupport();
+            });
 
         }
 
@@ -40,6 +43,16 @@ namespace Herobook
             app.UseStaticFiles();
             app.UseDefaultFiles();
             app.UseMvc();
+        }
+    }
+
+    public static class MvcOptionsExtensions {
+        public static void AddHalJsonSupport(this Microsoft.AspNetCore.Mvc.MvcOptions options) {
+            // https://stackoverflow.com/questions/38084437/provide-arraypool-object-to-jsonoutputformatter-constructor
+            var formatterSettings = JsonSerializerSettingsProvider.CreateSerializerSettings();
+            formatterSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            var formatter = new HalJsonOutputFormatter(formatterSettings, ArrayPool<Char>.Shared);
+            options.OutputFormatters.Insert(0, formatter);
         }
     }
 }

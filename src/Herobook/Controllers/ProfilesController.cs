@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Herobook.Workshop.Data;
 using Herobook.Workshop.Data.Entities;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace Herobook.Controllers.Api {
 
@@ -19,8 +20,14 @@ namespace Herobook.Controllers.Api {
 
         [Route("api/profiles/")]
         [HttpGet]
-        public object GetProfiles() {
-            return db.ListProfiles();
+        public object GetProfiles(int index = 0, int count = 10) {
+            var _links = Hal.Paginate(Request.Path, index, count, db.CountProfiles());
+            var items = db.ListProfiles().Skip(index).Take(count);
+            var result = new {
+                _links,
+                items
+            };
+            return Ok(result);
         }
 
         [Route("api/profiles/{username}")]
