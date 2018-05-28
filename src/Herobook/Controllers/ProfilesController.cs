@@ -8,22 +8,28 @@ using Microsoft.AspNetCore.Mvc;
 using Herobook.Workshop.Data;
 using Herobook.Workshop.Data.Entities;
 using Microsoft.AspNetCore.Http.Extensions;
+using Herobook.Workshop.Hypermedia;
 
-namespace Herobook.Controllers.Api {
+namespace Herobook.Controllers.Api
+{
 
-    public class ProfilesController : Controller {
+    public class ProfilesController : Controller
+    {
 
         private IDatabase db;
-        public ProfilesController(IDatabase database) {
+        public ProfilesController(IDatabase database)
+        {
             this.db = database;
         }
 
         [Route("api/profiles/")]
         [HttpGet]
-        public object GetProfiles(int index = 0, int count = 10) {
+        public object GetProfiles(int index = 0, int count = 10)
+        {
             var _links = Hal.Paginate(Request.Path, index, count, db.CountProfiles());
-            var items = db.ListProfiles().Skip(index).Take(count);
-            var result = new {
+            var items = db.ListProfiles().Skip(index).Take(count).Select(profile => profile.ToResource()); ;
+            var result = new
+            {
                 _links,
                 items
             };
@@ -32,36 +38,41 @@ namespace Herobook.Controllers.Api {
 
         [Route("api/profiles/{username}")]
         [HttpGet]
-        public object GetProfile(string username, string expand = null) {
-            var resource = db.FindProfile(username);
+        public object GetProfile(string username, string expand = null)
+        {
+            var resource = db.FindProfile(username).ToResource();
             return (object)resource ?? NotFound();
         }
 
         [Route("api/profiles/{username}/friends")]
         [HttpGet]
-        public object GetProfileFriends(string username) {
+        public object GetProfileFriends(string username)
+        {
             return db.LoadFriends(username);
         }
 
         [Route("api/profiles/")]
         [HttpPost]
-        public object Post([FromBody] Profile profile) {
+        public object Post([FromBody] Profile profile)
+        {
             var existing = db.FindProfile(profile.Username);
             if (existing != null) return StatusCode(StatusCodes.Status409Conflict, "That username is not available");
             db.CreateProfile(profile);
-            return Created(Url.Content($"~/api/profiles/{profile.Username}"), profile);
+            return Created(Url.Content($"~/api/profiles/{profile.Username}"), profile.ToResource());
         }
 
         [Route("api/profiles/{username}")]
         [HttpPut]
-        public object Put(string username, [FromBody] Profile profile) {
+        public object Put(string username, [FromBody] Profile profile)
+        {
             var result = db.UpdateProfile(username, profile);
-            return result;
+            return result.ToResource();
         }
 
         [Route("api/profiles/{username}")]
         [HttpDelete]
-        public object Delete(string username) {
+        public object Delete(string username)
+        {
             db.DeleteProfile(username);
             return Ok();
         }
