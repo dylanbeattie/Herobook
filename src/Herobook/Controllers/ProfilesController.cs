@@ -38,7 +38,7 @@ namespace Herobook.Controllers.Api
 
         [Route("api/profiles/{username}")]
         [HttpGet]
-        public object GetProfile(string username, string expand = null)
+        public object GetProfile(string username)
         {
             var resource = db.FindProfile(username).ToResource();
             return (object)resource ?? NotFound();
